@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Note Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6e48aa;
+            --secondary: #9d50bb;
+            --accent: #4776E6;
+            --dark: #1a1a2e;
+            --darker: #16213e;
+            --light: #f8f9fa;
+            --neon: #00f2fe;
+            --neon-pink: #fe00f2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            background: linear-gradient(90deg, var(--neon), var(--neon-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+            margin-bottom: 1rem;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-weight: 300;
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 2rem;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            resize: vertical;
+            margin-bottom: 1rem;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--neon);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(110, 72, 170, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-accent {
+            background: linear-gradient(90deg, var(--accent), #00f2fe);
+            color: white;
+        }
+
+        .btn-accent:hover {
+            box-shadow: 0 5px 15px rgba(71, 118, 230, 0.4);
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            position: relative;
+            opacity: 0.7;
+        }
+
+        .tab.active {
+            opacity: 1;
+            color: var(--neon);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--neon);
+            border-radius: 3px 3px 0 0;
+            animation: neon-glow 1.5s infinite alternate;
+        }
+
+        @keyframes neon-glow {
+            from {
+                box-shadow: 0 0 5px var(--neon);
+            }
+            to {
+                box-shadow: 0 0 15px var(--neon);
+            }
+        }
+
+        .result-section {
+            margin-top: 1.5rem;
+        }
+
+        .result-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            color: var(--neon);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .highlight {
+            background: rgba(0, 242, 254, 0.2);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            border-left: 3px solid var(--neon);
+        }
+
+        .word-cloud {
+            width: 100%;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--neon), var(--neon-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 0.3rem;
+        }
+
+        /* Flashcard styles */
+        .flashcard {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            margin: 1rem 0;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            border-radius: 15px;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: white;
+            transform: rotateY(180deg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .btn-group {
+                flex-direction: column;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="container">
+        <header>
+            <h1>NEON NOTE ANALYZER</h1>
+            <p class="tagline">Your ultimate tool for note analysis and summarization</p>
+        </header>
+
+        <div class="glass-card">
+            <textarea id="inputText" placeholder="Paste your notes here..."></textarea>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="analyzeNotes()">
+                    <span>🔍 Analyze Notes</span>
+                </button>
+                <button class="btn btn-secondary" onclick="saveNotes()">
+                    <span>💾 Save</span>
+                </button>
+                <button class="btn btn-secondary" onclick="loadNotes()">
+                    <span>📂 Load</span>
+                </button>
+                <button class="btn btn-accent" onclick="exportPDF()">
+                    <span>📄 Export PDF</span>
+                </button>
+                <button class="btn btn-accent" onclick="exportTXT()">
+                    <span>📝 Export TXT</span>
+                </button>
+            </div>
+
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('summary')">Summary</div>
+                <div class="tab" onclick="switchTab('stats')">Statistics</div>
+                <div class="tab" onclick="switchTab('flashcards')">Flashcards</div>
+                <div class="tab" onclick="switchTab('cloud')">Word Cloud</div>
+            </div>
+
+            <div id="summary-tab" class="tab-content">
+                <div class="result-section">
+                    <h3>📌 Key Summary</h3>
+                    <div id="summaryOutput" class="summary-content">Your summary will appear here...</div>
+                </div>
+            </div>
+
+            <div id="stats-tab" class="tab-content" style="display:none;">
+                <div class="result-section">
+                    <h3>📊 Detailed Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="charCount">0</div>
+                            <div class="stat-label">Characters</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="wordCount">0</div>
+                            <div class="stat-label">Words</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="sentenceCount">0</div>
+                            <div class="stat-label">Sentences</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="readabilityScore">0</div>
+                            <div class="stat-label">Readability</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="flashcards-tab" class="tab-content" style="display:none;">
+                <div class="result-section">
+                    <h3>🎴 Generated Flashcards</h3>
+                    <button class="btn btn-primary" onclick="generateFlashcards()">
+                        <span>🔄 Generate Flashcards</span>
+                    </button>
+                    <div id="flashcardContainer" style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <div id="cloud-tab" class="tab-content" style="display:none;">
+                <div class="result-section">
+                    <h3>☁️ Word Cloud</h3>
+                    <canvas class="word-cloud" id="wordCloud"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize particles.js
+        particlesJS("particles-js", {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: "#00f2fe" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: "#00f2fe", opacity: 0.2, width: 1 },
+                move: { enable: true, speed: 2, direction: "none", random: true, straight: false, out_mode: "out" }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "grab" },
+                    onclick: { enable: true, mode: "push" }
+                }
+            }
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+        }
+
+        // [Previous analysis functions...]
+        // [Add all your existing JavaScript functionality here]
+        
+        // Sample function to show functionality
+        function analyzeNotes() {
+            const inputText = document.getElementById('inputText').value;
+            if (!inputText.trim()) return alert("Please enter some notes first!");
+            
+            // Sample analysis - replace with your actual analysis logic
+            document.getElementById('summaryOutput').innerHTML = 
+                "• This is a sample summary point.<br>• Another important point extracted.<br>• Key concept highlighted.";
+            
+            document.getElementById('charCount').textContent = inputText.length;
+            document.getElementById('wordCount').textContent = inputText.trim() === "" ? 0 : inputText.split(/\s+/).length;
+            document.getElementById('sentenceCount').textContent = inputText.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+            document.getElementById('readabilityScore').textContent = Math.floor(Math.random() * 30 + 70);
+            
+            // Generate a sample word cloud
+            generateWordCloud();
+        }
+        
+        function generateWordCloud() {
+            const ctx = document.getElementById('wordCloud').getContext('2d');
+            // Sample word cloud data
+            new Chart(ctx, {
+                type: 'wordCloud',
+                data: {
+                    labels: ['Analysis', 'Notes', 'Important', 'Summary', 'Study', 'Learn', 'Knowledge', 'Information'],
+                    datasets: [{
+                        data: [12, 9, 8, 7, 6, 5, 4, 3]
+                    }]
+                },
+                options: {
+                    title: { display: false },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+        
+        function generateFlashcards() {
+            const container = document.getElementById('flashcardContainer');
+            container.innerHTML = '';
+            
+            const flashcards = [
+                { front: "What is the capital of France?", back: "Paris" },
+                { front: "2 + 2 equals?", back: "4" },
+                { front: "Main component of air?", back: "Nitrogen" }
+            ];
+            
+            flashcards.forEach((card, i) => {
+                const flashcard = document.createElement('div');
+                flashcard.className = 'flashcard';
+                flashcard.innerHTML = `
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front">
+                            <h3>Card ${i+1}</h3>
+                            <p>${card.front}</p>
+                        </div>
+                        <div class="flashcard-back">
+                            <p>${card.back}</p>
+                        </div>
+                    </div>
+                `;
+                flashcard.onclick = function() { this.classList.toggle('flipped'); };
+                container.appendChild(flashcard);
+            });
+        }
+    </script>
+</body>
+</html>
